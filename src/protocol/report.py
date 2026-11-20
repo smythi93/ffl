@@ -715,16 +715,17 @@ def table_example(
     rows = [
         "\\begin{tabular}{rrrrrr}",
         "\\toprule",
-        "Line & $e_f$ & $e_p$ & $w(l)$ & " + formula + " & augmented \\\\",
+        "Line & $e_f$ & $e_p$ & $w(l)$ & " + formula + " & Augmented \\\\",
         "\\midrule",
     ]
     for index in order:
         line = int(lines["line"][index])
-        mark = "\\textbf{" + str(line) + "}" if (lines["file"][index], line) in faulty else str(line)
-        rows.append(
-            f"{mark} & {int(ef[index])} & {int(ep[index])} & {weights[index]:.3f} & "
-            f"{base[index]:.3f} & {augmented[index]:.3f} \\\\"
-        )
+        cells = [str(line), str(int(ef[index])), str(int(ep[index])),
+                 f"{weights[index]:.3f}", f"{base[index]:.3f}", f"{augmented[index]:.3f}"]
+        if (lines["file"][index], line) in faulty:
+            #: The whole faulty row in bold, so it stands out against the striping.
+            cells = ["\\textbf{" + c + "}" for c in cells]
+        rows.append(" & ".join(cells) + " \\\\")
     rows += ["\\bottomrule", "\\end{tabular}"]
     return "\n".join(rows)
 
@@ -1432,7 +1433,7 @@ def render(study_dir: Path, out_dir: Path, tag: Optional[str] = None) -> None:
     write_table(out_dir, "tab_moderators.tex", table_moderators(analysis))
     example = study_dir.parent / "artifacts"
     if (example / "middle_1.json.gz").exists():
-        (out_dir / "tab_example.tex").write_text(table_example(example))
+        write_table(out_dir, "tab_example.tex", table_example(example))
     # tab_diagnostics is written after the categories merge below.
     write_table(out_dir, "tab_feasibility.tex", table_feasibility(diagnostics, subjects))
     categories_path = study_dir / f"categories{suffix}.csv"

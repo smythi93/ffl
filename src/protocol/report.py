@@ -235,17 +235,16 @@ def _fmt(value: float, digits: int = 3) -> str:
         return "--"
     if abs(value) >= 1000:
         return f"{value:,.0f}"
-    return f"{value:.{digits}f}"
+    text = f"{value:.{digits}f}"
+    #: A value that rounds to zero is shown without a sign ("0.00", not "-0.00").
+    return text.lstrip("-") if float(text) == 0 else text
 
 
-def _stars(q: float) -> str:
-    if q < 0.001:
-        return "$^{***}$"
-    if q < 0.01:
-        return "$^{**}$"
-    if q < 0.05:
-        return "$^{*}$"
-    return ""
+def _fmt_q(q: float) -> str:
+    """A q- or p-value, with values below 0.001 shown as a bound instead of 0.000."""
+    if q is not None and np.isfinite(q) and q < 0.001:
+        return "$<$0.001"
+    return _fmt(q, 3)
 
 
 def table_primary(effects: pd.DataFrame, method: str = "rf") -> str:
@@ -272,7 +271,7 @@ def table_primary(effects: pd.DataFrame, method: str = "rf") -> str:
                 f"{_fmt(row.coefficient, digits)} & {_fmt(row.d, 2)} & "
                 f"{_fmt(row.d_paired, 2)} & "
                 f"[{_fmt(row.ci_low, digits)}, {_fmt(row.ci_high, digits)}] & "
-                f"{_fmt(row.qvalue, 3)}{_stars(row.qvalue)} \\\\"
+                f"{_fmt_q(row.qvalue)} \\\\"
             )
         lines.append("\\midrule")
     lines[-1] = "\\bottomrule"
@@ -286,7 +285,7 @@ def table_superiority(analysis: Dict, method: str = "rf", key: str = "superiorit
     lines = [
         "\\begin{tabular}{lccccccl}",
         "\\toprule",
-        "Formula & top-1 & top-5 & top-10 & EXAM & wasted & improved & superior \\\\",
+        "Formula & top-1 & top-5 & top-10 & EXAM & WE & improved & superior \\\\",
         "\\midrule",
     ]
     for formula in FORMULAS:
@@ -427,9 +426,9 @@ def table_family(effects: pd.DataFrame, family: str, method: str = "rf") -> str:
         .dropna(how="all")
     )
     lines = [
-        "\\begin{tabular}{lrrrrrl}",
+        "\\begin{tabular}{lrrrrrrrr}",
         "\\toprule",
-        "Outcome & Baseline & Augmented & $\\Delta$ & $d$ & $q$ & improve/tie/degrade \\\\",
+        "Outcome & Baseline & Augmented & $\\Delta$ & $d$ & $q$ & Improve & Tie & Degrade \\\\",
         "\\midrule",
     ]
     for outcome, row in aggregated.iterrows():
@@ -437,8 +436,8 @@ def table_family(effects: pd.DataFrame, family: str, method: str = "rf") -> str:
         lines.append(
             f"{METRIC_LABELS.get(outcome, outcome)} & {_fmt(row.baseline, digits)} & "
             f"{_fmt(row.augmented, digits)} & {_fmt(row.delta, digits)} & {_fmt(row.d, 2)} & "
-            f"{_fmt(row.q, 3)}{_stars(row.q)} & "
-            f"{int(row.improve)}/{int(row.tie)}/{int(row.degrade)} \\\\"
+            f"{_fmt_q(row.q)} & "
+            f"{int(row.improve):,} & {int(row.tie):,} & {int(row.degrade):,} \\\\"
         )
     lines += ["\\bottomrule", "\\end{tabular}"]
     return "\n".join(lines)
@@ -757,7 +756,7 @@ def table_moderators(analysis: Dict, outcome: str = "patch_exam_avg") -> str:
         rho = entry["spearman"].get(name, float("nan"))
         lines.append(
             f"{MODERATOR_LABELS.get(name, name)} & {_fmt(values['coefficient'], 3)} & "
-            f"{_fmt(values['pvalue'], 3)}{_stars(values['pvalue'])} & {_fmt(rho, 2)} \\\\"
+            f"{_fmt_q(values['pvalue'])} & {_fmt(rho, 2)} \\\\"
         )
     lines += ["\\bottomrule", "\\end{tabular}"]
     return "\n".join(lines)

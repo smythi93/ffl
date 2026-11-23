@@ -856,7 +856,7 @@ def write_numbers(
         "detectable": f"{analysis['detectable_effect_d']:.2f}",
         "nsuperior": f"{verdict['n_superior']}",
         "npairedsuperior": f"{analysis['methods']['rf']['superiority_paired']['n_superior']}",
-        "signtestp": f"{verdict['sign_test_p']:.4f}",
+        "signtestp": _fmt_q(verdict["sign_test_p"]),
         "medianfeatures": f"{ok['n_features_total'].median():,.0f}",
         "medianconstant": f"{100 * ok['constant_fraction'].median():.1f}",
         "medianruntime": f"{ok['runtime_total'].median():.1f}",

@@ -190,8 +190,10 @@ def figure_controls(outcomes: pd.DataFrame, path: Path) -> None:
 
 
 def figure_forest(effects: pd.DataFrame, path: Path, method: str = "rf") -> None:
-    """Standardized method effect per baseline formula, oriented so that
-    positive always means the augmented method is better."""
+    """Paired standardized method effect d_z per baseline formula, oriented so
+    that positive always means the augmented method is better. The interval is
+    the bootstrap interval of the mean paired difference, divided by the
+    standard deviation of the paired differences."""
     subset = effects[effects.method == method]
     if subset.empty:
         return
@@ -208,10 +210,10 @@ def figure_forest(effects: pd.DataFrame, path: Path, method: str = "rf") -> None
             if row.empty:
                 continue
             row = row.iloc[0]
-            spread = float(row.get("spread", 0.0) or 0.0)
-            d = sign * float(row["d"])
-            low = sign * (row["ci_low"] / spread) if spread > 0 else d
-            high = sign * (row["ci_high"] / spread) if spread > 0 else d
+            spread = float(row.get("paired_sd", 0.0) or 0.0)
+            d = sign * float(row["d_paired"])
+            low = sign * (row["perm_ci_low"] / spread) if spread > 0 else d
+            high = sign * (row["perm_ci_high"] / spread) if spread > 0 else d
             y = len(FORMULAS) - 1 - index
             ax.plot([min(low, high), max(low, high)], [y, y], color=SERIES[0],
                     linewidth=1.4, solid_capstyle="round", zorder=2)
@@ -226,10 +228,10 @@ def figure_forest(effects: pd.DataFrame, path: Path, method: str = "rf") -> None
     for metric in metrics:
         rows = subset[subset.outcome == metric]
         for _, row in rows.iterrows():
-            spread = float(row.get("spread", 0.0) or 0.0)
+            spread = float(row.get("paired_sd", 0.0) or 0.0)
             if spread > 0:
-                spans += [abs(row["ci_low"] / spread), abs(row["ci_high"] / spread)]
-        spans += list(np.abs(rows["d"].to_numpy()))
+                spans += [abs(row["perm_ci_low"] / spread), abs(row["perm_ci_high"] / spread)]
+        spans += list(np.abs(rows["d_paired"].to_numpy()))
     finite = [v for v in spans if np.isfinite(v)]
     limit = float(np.percentile(finite, 98)) * 1.2 if finite else 0.5
     limit = min(max(limit, 0.35), 2.0)
@@ -238,7 +240,7 @@ def figure_forest(effects: pd.DataFrame, path: Path, method: str = "rf") -> None
         ax.set_xlim(-limit, limit)
         ax.set_xticks([-tick, 0.0, tick])
         ax.set_xticklabels([f"{-tick:g}", "0", f"{tick:g}"], fontsize=6.5)
-    fig.supxlabel("standardized effect $d$  (positive $=$ augmented better; "
+    fig.supxlabel("paired effect $d_z$  (positive $=$ augmented better; "
                   "shaded band $=$ negligible)", fontsize=7.5, color=INK_2, y=-0.06)
     _save(fig, path)
 

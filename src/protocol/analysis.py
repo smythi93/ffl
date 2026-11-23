@@ -325,8 +325,8 @@ def paired_effect(base: np.ndarray, aug: np.ndarray, direction: str) -> Dict[str
     spread of the baseline outcome, so a few subjects with extreme values (as in
     wasted effort) inflate the denominator. d_z standardizes by the spread of
     the per-subject differences instead, which removes the between-subject
-    variance that the paired design holds fixed. It is reported alongside the
-    registered d and does not replace it in the decision rule.
+    variance that the paired design holds fixed. The manuscript applies the
+    decision rule with d_z and reports the registered d as a check.
     """
     diff = np.asarray(aug, dtype=float) - np.asarray(base, dtype=float)
     diff = diff[~np.isnan(diff)]

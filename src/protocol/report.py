@@ -1229,6 +1229,7 @@ def write_numbers(
         result = analysis["methods"].get(method)
         if result is not None:
             values[f"{key}nsuperior"] = f"{result['superiority']['n_superior']}"
+            values[f"{key}npairedsuperior"] = f"{result['superiority_paired']['n_superior']}"
 
     #: Post-hoc feature scorers and the tie-break-only rule (exploratory).
     study = out_dir.parent / "study"

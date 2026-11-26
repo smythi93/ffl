@@ -842,9 +842,12 @@ def write_numbers(
     outcomes: Optional[pd.DataFrame] = None,
     categories: Optional[pd.DataFrame] = None,
 ) -> None:
-    """Inline numbers used in the running text, one macro file each."""
-    numbers = out_dir / "numbers"
-    numbers.mkdir(parents=True, exist_ok=True)
+    """Inline numbers used in the running text, all in one macro file.
+
+    ``numbers.tex`` defines every value as ``\\csname fflnum@<key>\\endcsname``.
+    The manuscript reads it through ``\\num{<key>}``, which fails the build on an
+    unknown key.
+    """
     ok = subjects[subjects.status == "ok"]
     verdict = analysis["methods"]["rf"]["superiority"]
     checks_path = out_dir.parent / "study" / "checks.csv"
@@ -1277,11 +1280,13 @@ def write_numbers(
     values.update(ltr_macros(study))
 
     #: A macro that renders as "nan" would ship silently into the manuscript. Drop
-    #: it instead: the missing \input then fails the LaTeX build, which is visible.
-    for key, value in sorted(values.items()):
-        if value.strip().lower() in {"nan", "-nan", "inf", "-inf", "none"}:
-            continue
-        (numbers / f"{key}.tex").write_text(value)
+    #: it instead: \num then fails the LaTeX build on the missing key, which is visible.
+    lines = [
+        f"\\expandafter\\def\\csname fflnum@{key}\\endcsname{{{value.strip()}}}"
+        for key, value in sorted(values.items())
+        if value.strip().lower() not in {"nan", "-nan", "inf", "-inf", "none"}
+    ]
+    (out_dir / "numbers.tex").write_text("\n".join(lines) + "\n")
 
 
 

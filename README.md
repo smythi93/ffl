@@ -27,7 +27,7 @@ replication package.
 | `vectors/<subject>.npz` | Per subject: labelled feature matrix (`matrix`, `labels`), feature names and types, importances per condition (`importance_*`), and the feature-to-line maps (`map_*`, `alt_*`, row indices into the artifact's line table). |
 | `traces/<subject>.json.gz` | Per subject: line signals derived from ordered traces of the existing tests (dynamic slice, failure proximity, automaton transition spectra), keyed by file and line; inputs of the ranker learned across projects (not registered). |
 | `study/` | Analysis outputs: outcome table (`outcomes.csv`), subject metadata and confounders, checks, diagnostics, feasibility (aggregated from the instrumentation run logs, which are not shipped), sensitivity grids, and the analysis result (`analysis.json`). |
-| `paper_out/` | Rendered tables, inline numbers (`numbers/*.tex`) and figures, exactly as used in the manuscript. |
+| `paper_out/` | Rendered tables, inline numbers (`numbers.tex`, one macro per value) and figures, exactly as used in the manuscript. |
 | `tests/` | Software-level controls: the decision rule fires on synthetic data with a known effect and stays silent at zero effect. |
 | `reproduce.sh` | Recomputes `study/` and `paper_out/` from `artifacts/`, `vectors/` and `traces/`. |
 

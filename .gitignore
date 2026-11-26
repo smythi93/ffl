@@ -192,3 +192,7 @@ study/
 paper_out/
 logs/
 sync_paper.sh
+# Zenodo upload set and package builds
+zenodo/
+replication-package/
+replication-package.tar.gz
